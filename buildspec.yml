@@ -12,22 +12,20 @@ phases:
     runtime-versions:
       python: 3.11
       java: corretto17
-    commands:
-      - echo "Installing dependencies..."
-      - echo "Skipping Trivy and Dependency-Check installation for now."
 
   pre_build:
     commands:
-      - echo "Pre-build phase starting..."
-      - echo "Dependencies ready."
+      - echo "Installing dependencies..."
+      - echo "Skipping Trivy and Dependency-Check for now..."
 
   build:
     commands:
       - echo "Running tests..."
       - echo "Building Docker image..."
-      - echo "$DOCKER_REGISTRY_PASSWORD" | docker login -u "$DOCKER_REGISTRY_USERNAME" --password-stdin "$DOCKER_REGISTRY_URL"
-      - docker build -t "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/swiggy:latest" .
-      - docker push "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/swiggy:latest"
+      # Uncomment when registry details are ready
+      # - echo "$DOCKER_REGISTRY_PASSWORD" | docker login -u "$DOCKER_REGISTRY_USERNAME" --password-stdin "$DOCKER_REGISTRY_URL"
+      # - docker build -t "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/swiggy:latest" .
+      # - docker push "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/swiggy:latest"
 
   post_build:
     commands:
@@ -35,9 +33,9 @@ phases:
       - echo "Sending build notification email..."
       - |
         aws ses send-email \
-          --from "madithati123@gmail.com" \
-          --destination "ToAddresses=moazamwattoo123@gmail.com" \
-          --message "Subject={Data=CodeBuild Status: $CODEBUILD_BUILD_ID},Body={Text={Data=Build status: $CODEBUILD_BUILD_STATUS}}" \
+          --from "moazamwattoo123@gmail.com" \
+          --destination '{"ToAddresses":["moazamwattoo123@gmail.com"]}' \
+          --message "{\"Subject\":{\"Data\":\"CodeBuild Status: $CODEBUILD_BUILD_ID\"},\"Body\":{\"Text\":{\"Data\":\"Build status: $CODEBUILD_BUILD_STATUS\"}}}" \
           --region "us-east-1"
 
 artifacts:
