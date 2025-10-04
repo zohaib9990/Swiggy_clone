@@ -29,11 +29,12 @@ phases:
 
 post_build:
   commands:
+    - echo "Sending build status email..."
     - aws ses send-email \
         --from "madithati123@gmail.com" \
-        --destination "ToAddresses=madithati123@gmail.com,moazamwattoo123@gmail.com" \
-        --message "Subject={Data=CodeBuild Status: $CODEBUILD_BUILD_ID},Body={Text={Data=Build status: $CODEBUILD_BUILD_STATUS}}" \
-        --region "us-east-1"
+        --destination '{"ToAddresses":["madithati123@gmail.com","moazamwattoo123@gmail.com"]}' \
+        --message '{"Subject":{"Data":"CodeBuild Status: '$CODEBUILD_BUILD_ID'"},"Body":{"Text":{"Data":"Build status: '$CODEBUILD_BUILD_STATUS'"}}}' \
+        --region us-east-1
 
 artifacts:
   files:
