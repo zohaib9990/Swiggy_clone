@@ -44,7 +44,7 @@ phases:
       - trivy image "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/swiggy:latest" >> trivyimage.txt
       - echo "Running OWASP Dependency-Check scan..."
       - cd dependency-check/bin
-      - ./dependency-check.sh --scan . --format ALL
+      - ./dependency-check.sh --noupdate --scan . --format ALL
       - cd ../..
       - echo "Build completed successfully!"
       - echo "Running SonarQube analysis..."
@@ -52,9 +52,8 @@ phases:
       - |
         aws ses send-email \
           --from "moazamwattoo123@gmail.com" \
-          --to "moazamwattoo123@gmail.com" \
-          --subject "CodeBuild Status: $CODEBUILD_BUILD_ID" \
-          --text "Build status: $CODEBUILD_BUILD_STATUS" \
+          --destination "ToAddresses=moazamwattoo123@gmail.com" \
+          --message "Subject={Data='CodeBuild Status: $CODEBUILD_BUILD_ID'},Body={Text={Data='Build status: $CODEBUILD_BUILD_STATUS'}}" \
           --region "us-east-1"
 
 artifacts:
