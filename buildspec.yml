@@ -26,14 +26,10 @@ phases:
       # - docker build -t "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/swiggy:latest" .
       # - docker push "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/swiggy:latest"
 
-post_build:
-  commands:
-    - echo "Sending build status email via SES..."
-    - aws ses send-email \
-        --from "moazamwattoo123@gmail.com" \
-        --destination "ToAddresses=moazamwattoo123@gmail.com" \
-        --message "Subject={Data=CodeBuild Status: $CODEBUILD_BUILD_ID},Body={Text={Data=Build status: $CODEBUILD_BUILD_STATUS}}" \
-        --region us-east-1
+  post_build:
+    commands:
+      - echo "Sending build status email via SES..."
+      - aws ses send-email --from "moazamwattoo123@gmail.com" --destination "ToAddresses=moazamwattoo123@gmail.com" --message "Subject={Data=CodeBuild Status: $CODEBUILD_BUILD_ID},Body={Text={Data=Build status: $CODEBUILD_BUILD_STATUS}}" --region us-east-1
 
 artifacts:
   files:
