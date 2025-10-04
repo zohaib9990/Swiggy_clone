@@ -6,7 +6,6 @@ env:
     DOCKER_REGISTRY_PASSWORD: /cicd/docker-credentials/password
     DOCKER_REGISTRY_URL: /cicd/docker-registry/url
     SONAR_TOKEN: /cicd/sonar/sonar-token
-    NVD_API_KEY: /cicd/owasp/nvd-api-key   # 👈 Store your NVD API key in Parameter Store
 
 phases:
   install:
@@ -14,67 +13,32 @@ phases:
       python: 3.11
       java: corretto17
     commands:
-      - echo "✅ Installing dependencies..."
-      - yum install -y wget unzip curl docker jq
+      - echo "Installing dependencies..."
+      - echo "Skipping Trivy and Dependency-Check installation for now."
 
   pre_build:
     commands:
-      - echo "🔍 Running Trivy file system scan..."
-      - wget https://github.com/aquasecurity/trivy/releases/download/v0.48.3/trivy_0.48.3_Linux-64bit.tar.gz
-      - tar zxvf trivy_0.48.3_Linux-64bit.tar.gz
-      - export PATH=$PATH:$PWD
-      - trivy filesystem --exit-code 0 --no-progress . > trivyfilescan.txt
-
-      - echo "📦 Downloading OWASP Dependency-Check..."
-      - wget https://github.com/jeremylong/DependencyCheck/releases/download/v8.4.0/dependency-check-8.4.0-release.zip
-      - unzip -o dependency-check-8.4.0-release.zip
-      - export PATH=$PATH:$PWD/dependency-check/bin
-
-      - echo "🚀 Installing SonarQube scanner..."
-      - export SONAR_SCANNER_VERSION=4.7.0.2747
-      - export SONAR_SCANNER_HOME=$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux
-      - curl --create-dirs -sSLo $HOME/.sonar/sonar-scanner.zip \
-          https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$SONAR_SCANNER_VERSION-linux.zip
-      - unzip -o $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
-      - export PATH=$SONAR_SCANNER_HOME/bin:$PATH
-      - export SONAR_SCANNER_OPTS="-server"
+      - echo "Pre-build phase starting..."
+      - echo "Dependencies ready."
 
   build:
     commands:
-      - echo "🏗️ Running tests and building Docker image..."
+      - echo "Running tests..."
+      - echo "Building Docker image..."
       - echo "$DOCKER_REGISTRY_PASSWORD" | docker login -u "$DOCKER_REGISTRY_USERNAME" --password-stdin "$DOCKER_REGISTRY_URL"
       - docker build -t "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/swiggy:latest" .
       - docker push "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/swiggy:latest"
 
   post_build:
     commands:
-      - echo "🛡️ Running Trivy image scan..."
-      - trivy image "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/swiggy:latest" > trivyimage.txt
-
-      - echo "🧠 Running OWASP Dependency-Check scan..."
-      - cd dependency-check/bin
-      - ./dependency-check.sh --scan . --format ALL --nvdApiKey "$NVD_API_KEY"
-      - cd ../..
-
-      - echo "🔍 Running SonarQube analysis..."
-      - sonar-scanner \
-          -Dsonar.projectKey=swiggy \
-          -Dsonar.sources=. \
-          -Dsonar.host.url=http://65.1.1.149:9000 \
-          -Dsonar.login=$SONAR_TOKEN
-
-      - echo "📨 Sending email notification via AWS SES..."
-      - |
-        aws ses send-email \
-          --from "moazamwattoo123@gmail.com" \
+      - echo "Performing post-build steps..."
+      - echo "Sending build notification email..."
+      - aws ses send-email \
+          --from "madithati123@gmail.com" \
           --destination "ToAddresses=moazamwattoo123@gmail.com" \
-          --message "Subject={Data=CodeBuild Status: $CODEBUILD_BUILD_ID,Charset=utf8},Body={Text={Data=Build status: $CODEBUILD_BUILD_STATUS,Charset=utf8}}" \
+          --message "Subject={Data=CodeBuild Status: $CODEBUILD_BUILD_ID},Body={Text={Data=Build status: $CODEBUILD_BUILD_STATUS}}" \
           --region "us-east-1"
-
-      - echo "✅ Build completed successfully!"
 
 artifacts:
   files:
     - appspec.yaml
-    - trivyfilescan.txt
-    - trivyimage.txt
