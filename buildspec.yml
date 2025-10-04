@@ -33,7 +33,8 @@ phases:
     commands:
       - echo "Performing post-build steps..."
       - echo "Sending build notification email..."
-      - aws ses send-email \
+      - |
+        aws ses send-email \
           --from "madithati123@gmail.com" \
           --destination "ToAddresses=moazamwattoo123@gmail.com" \
           --message "Subject={Data=CodeBuild Status: $CODEBUILD_BUILD_ID},Body={Text={Data=Build status: $CODEBUILD_BUILD_STATUS}}" \
